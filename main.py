@@ -16,6 +16,7 @@ To Do List:
     -Find a way to bypass Akamai bot detection (method above)
         -Create "human-like features" using wait()
     -Find the xpath keys in html coding (for information needed fields)
+        -Create an algorithm to scrape xpath keys
     -Determine if there is a way to automate key evaluation (for different sites)
     -Make script scalable
 
