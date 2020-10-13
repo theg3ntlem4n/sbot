@@ -21,7 +21,11 @@ from prompt_toolkit.styles import Style
 from fake_useragent import UserAgent
 import logFormats as logging
 
+
+#create a fake UserAgent with a header that updates from a real life database (ie: ua.random)
 ua = UserAgent()
+
+#aesthetic
 custom_style_fancy = Style([
     ('qmark', 'fg:#63fffd bold'),       # token in front of the question
     ('question', 'bold'),               # question text
@@ -35,12 +39,14 @@ custom_style_fancy = Style([
     ('disabled', 'fg:#63fffd italic')   # disabled choices for select and checkbox prompts
 ])
 
+#clear screen
 def clear(): 
     if os.name == 'nt': 
         _ = os.system('cls') 
     else: 
         _ = os.system('clear') 
-  
+
+#global variables
 global cartNumber
 global paymentFraud
 global possibleCheckout
@@ -48,25 +54,23 @@ cartNumber = 0
 paymentFraud = 0
 possibleCheckout = 0
 
+#software information
 version = '0.0.3'
 ctypes.windll.kernel32.SetConsoleTitleW(f"Shoop Palace Version {version} | Carts: {cartNumber} | Payment Frauds: {paymentFraud} | Verified Checkouts: {possibleCheckout}")
 
-
 state_codes = {"AL":1,"AK":2,"AZ":4,"AR":5,"CA":12,"CO":13,"CT":14,"DE":15,"DC":16,"FL":18,"GA":19,"HI":21,"ID":22,"IL":23,"IN":24,"IA":25,"KS":26,"KY":27,"LA":28,"ME":29,"MD":31,"MA":32,"MI":33,"MN":34,"MS":35,"MO":36,"MT":37,"NE":38,"NV":39,"NH":40,"NJ":41,"NM":42,"NY":43,"NC":44,"ND":45,"OH":47,"OK":48,"OR":49,"PA":51,"RI":53,"SC":54,"SD":55,"TN":56,"TX":57,"UT":58,"VT":59,"VA":61,"WA":62,"WV":63,"WI":64,"WY":65}
-
-
 
 thread_local = threading.local()
 init(convert=True)
 
-
+#get settings from settings.json
 def getsetting(dname):
     os.chdir(dname)
     with open('settings.json') as f:
         setting = json.load(f)
     return setting
 
-
+#Eastern Standard Time return
 def est():
     d2 = datetime.now(timezone.utc).strftime("%H:%M:%S")
     d3 = datetime.strptime(d2, "%H:%M:%S")
@@ -82,12 +86,14 @@ def est():
         hour = '0' + str(hour)
     return (f'{hour}:{minute}:{sec}')
 
+#more formatting with datetime
 def logFormat():
     now = str(datetime.now())
     now = now.split(' ')[1]
     printFormat = '[' + str(now) + ']' + ' ' + '[Shoop Palace] '
     return printFormat
 
+#send success message
 def success(frontend, product, size, successwebhook):
     time = est()
     successwebhook.set_footer(text='Danyul#0001')
@@ -103,6 +109,7 @@ def success(frontend, product, size, successwebhook):
     except:
         pass
 
+#use initial request to grab HTML data from URL and find sizes
 def grabURL(num, count, productLink, new_sizes, task, rotate, cookieList, dname, successwebhook, profileInput, proxy_group, sizes, proxy_type):
     s = requests.Session()
     status = 'Loading Website'
@@ -128,6 +135,7 @@ def grabURL(num, count, productLink, new_sizes, task, rotate, cookieList, dname,
         else: 
             pass
 
+        #create proxy
         p = {
         'https' : proxy
         }
@@ -153,10 +161,13 @@ def grabURL(num, count, productLink, new_sizes, task, rotate, cookieList, dname,
             instance += 1
             time.sleep(rotatedelay + (random.randint(0, int(rotatedelay/2))))
             continue
+
         cookies = s.cookies.get_dict()
+
         if cookieList:
             cookies['__cfduid'] = cfuid
             cookies['__cf_bm'] = cfbm
+
         #print(f'First Cookies: {cookies}')
         html = (response.text)
         soup = BeautifulSoup(html, 'html.parser')
@@ -167,6 +178,7 @@ def grabURL(num, count, productLink, new_sizes, task, rotate, cookieList, dname,
             checkoutDict[button.text] = button['data-id']
 
         #print(str(x) + ": " + soup.title.text)
+        #check for errors
         if (response.status_code) == 501:
             print(colored(logging.logFormat(profileInput, proxy_group, sizes, proxy, status) + "Error 501 Backend Timeout | Retrying", "yellow"))
             instance += 1
@@ -473,6 +485,7 @@ def updateCart(num, count, productLink, new_sizes, task, rotate, quantity, insta
             return 
 '''
 
+#checkout with the paymet info
 def checkout(num, count, productLink, new_sizes, task, rotate, quantity, profile, cookieList, dname, successwebhook, profileInput, proxy_group, sizes, proxy_type):
     global possibleCheckout
     global paymentFraud
@@ -480,14 +493,14 @@ def checkout(num, count, productLink, new_sizes, task, rotate, quantity, profile
     s, product, instance, cartID, frontend, size = addToCart(num, count, productLink, new_sizes, task, rotate, cookieList, dname, successwebhook, profileInput, proxy_group, sizes, proxy_type)
     if s == 'stopped':
         return
-    if int(quantity) > 1:
-        updateCart(num, count, productLink, new_sizes, task, rotate, quantity, instance, cartID, frontend, s, dname)
+    #if int(quantity) > 1:
+    #    updateCart(num, count, productLink, new_sizes, task, rotate, quantity, instance, cartID, frontend, s, dname)
     finalCookie = s.cookies.get_dict()
     
     if cookieList:
         cookieArray = cookieList[num].split(',')
         cfuid = (cookieArray[0])
-        cfbm = (cookieArray[1])
+        cfb = (cookieArray[1])
         finalCookie['__cfduid'] = cfuid
         finalCookie['__cf_bm'] = cfb
     else: 
@@ -663,6 +676,7 @@ def checkout(num, count, productLink, new_sizes, task, rotate, quantity, profile
                 instance +=1
             time.sleep(rotatedelay + (random.randint(0, int(rotatedelay/2)))) 
 
+#exactly what the method name says
 def initiateTask(dname):
     setting = getsetting(dname)
     SUCCESS_WEBHOOK = setting['Discord']
